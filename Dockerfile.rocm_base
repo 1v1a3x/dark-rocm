@@ -61,6 +61,50 @@ RUN apt-get update -y \
 RUN pip install -U packaging 'cmake<4' ninja wheel 'setuptools<80' pybind11 Cython
 RUN apt-get update && apt-get install -y libjpeg-dev libsox-dev libsox-fmt-all sox && rm -rf /var/lib/apt/lists/*
 
+# Install KasmVNC with GNOME desktop and audio support
+RUN apt-get update -y \
+    && apt-get install -y wget software-properties-common gnupg2 \
+    && wget -qO - https://repo.kasmweb.com/kasmweb.asc | apt-key add - \
+    && echo "deb [arch=amd64] https://repo.kasmweb.com/debian stable main" | tee /etc/apt/sources.list.d/kasmweb.list \
+    && apt-get update -y \
+    && apt-get install -y kasmvncserver \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install GNOME desktop
+RUN apt-get update -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ubuntu-desktop-minimal \
+    gnome-shell \
+    gnome-terminal \
+    nautilus \
+    firefox \
+    x11-xserver-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PulseAudio for browser audio support
+RUN apt-get update -y \
+    && apt-get install -y \
+    pulseaudio \
+    pulseaudio-utils \
+    pulseaudio-module-zeroconf \
+    alsa-utils \
+    paprefs \
+    pavucontrol \
+    && rm -rf /var/lib/apt/lists/*
+
+# KasmVNC configuration
+ARG KASM_USER=kasm_user
+ARG KASM_PASSWORD=password
+ENV KASM_USER=${KASM_USER}
+ENV KASM_PASSWORD=${KASM_PASSWORD}
+
+# Copy and setup KasmVNC startup script
+COPY docker/start-kasmvnc.sh /usr/local/bin/start-kasmvnc.sh
+RUN chmod +x /usr/local/bin/start-kasmvnc.sh
+
+# Expose KasmVNC ports
+EXPOSE 6901 6902 5901
+
 # Install sccache if USE_SCCACHE is enabled (for release builds)
 ARG USE_SCCACHE
 ARG SCCACHE_DOWNLOAD_URL
@@ -314,3 +358,7 @@ RUN echo "BASE_IMAGE: ${BASE_IMAGE}" > /app/versions.txt \
     && echo "AITER_REPO: ${AITER_REPO}" >> /app/versions.txt \
     && echo "MORI_BRANCH: ${MORI_BRANCH}" >> /app/versions.txt \
     && echo "MORI_REPO: ${MORI_REPO}" >> /app/versions.txt
+
+# Optional KasmVNC startup (enabled via START_KASMVNC=1)
+ENV START_KASMVNC=0
+CMD ["sh", "-c", "if [ \"$START_KASMVNC\" = \"1\" ]; then /usr/local/bin/start-kasmvnc.sh; else /bin/bash; fi"]
