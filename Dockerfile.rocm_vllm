@@ -1,0 +1,8 @@
+# Dockerfile для вашего проекта
+FROM rocm/vllm:latest
+
+# Установите дополнительные зависимости
+RUN pip install jupyterlab numpy pandas
+
+# Добавьте KasmVNC если нужен GUI
+RUN apt-get update && apt-get install -y kasmvnc-server

@@ -63,11 +63,10 @@ RUN apt-get update && apt-get install -y libjpeg-dev libsox-dev libsox-fmt-all s
 
 # Install KasmVNC with GNOME desktop and audio support
 RUN apt-get update -y \
-    && apt-get install -y wget software-properties-common gnupg2 \
-    && wget -qO - https://repo.kasmweb.com/kasmweb.asc | apt-key add - \
-    && echo "deb [arch=amd64] https://repo.kasmweb.com/debian stable main" | tee /etc/apt/sources.list.d/kasmweb.list \
-    && apt-get update -y \
-    && apt-get install -y kasmvncserver \
+    && apt-get install -y wget \
+    && wget -q https://github.com/kasmtech/KasmVNC/releases/download/v1.4.0/kasmvncserver_jammy_1.4.0_amd64.deb \
+    && apt-get install -y ./kasmvncserver_jammy_1.4.0_amd64.deb \
+    && rm -f ./kasmvncserver_jammy_1.4.0_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
 
 # Install GNOME desktop
